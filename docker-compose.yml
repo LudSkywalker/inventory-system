@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  kafka:
+    image: confluentinc/cp-kafka:7.4.0
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+
+  store-service:
+    build:
+      context: .
+      dockerfile: store-service/Dockerfile
+    depends_on:
+      - kafka
+    environment:
+      KAFKA_BROKERS: kafka:29092
+      PORT: 8080
+      DB_MODE: "memory"
+    ports:
+      - "8080:8080"
+
+  operator-service:
+    build:
+      context: .
+      dockerfile: operator-service/Dockerfile
+    depends_on:
+      - kafka
+      - store-service
+    environment:
+      KAFKA_BROKERS: kafka:29092
+      PORT: 8082
+      STORE_URL: "http://store-service:8080"
+
+  backend-service:
+    build:
+      context: .
+      dockerfile: backend-service/Dockerfile
+    depends_on:
+      - kafka
+      - store-service
+    ports:
+      - "8081:8081"
+    environment:
+      KAFKA_BROKERS: kafka:29092
+      PORT: 8081
+      STORE_URL: "http://store-service:8080"

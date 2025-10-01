@@ -1,0 +1,95 @@
+package service
+
+import (
+	"context"
+	"fmt"
+
+	"github.com/LudSkywalker/inventory-system/store-service/app/dto"
+	"github.com/LudSkywalker/inventory-system/store-service/app/port/output"
+	"github.com/LudSkywalker/inventory-system/store-service/domain/entity"
+	"github.com/LudSkywalker/inventory-system/store-service/domain/event"
+	"github.com/LudSkywalker/inventory-system/store-service/domain/valueobject"
+)
+
+type inventoryService struct {
+	repo     output.InventoryRepository
+	eventBus output.EventPublisher
+}
+
+func NewInventoryService(repo output.InventoryRepository, eventBus output.EventPublisher) *inventoryService {
+	return &inventoryService{
+		repo:     repo,
+		eventBus: eventBus,
+	}
+}
+
+func (s *inventoryService) UpdateStock(ctx context.Context, cmd dto.UpdateStockCommand) error {
+	quantity, err := valueobject.NewQuantity(cmd.Quantity)
+	if err != nil {
+		return fmt.Errorf("invalid quantity: %w", err)
+	}
+
+	inventory, err := s.repo.Find(ctx, cmd.ItemID, cmd.StoreID)
+	if err != nil {
+		// If not found, create new inventory
+		inventory, err = entity.NewInventory(cmd.ItemID, cmd.StoreID, quantity)
+		if err != nil {
+			return fmt.Errorf("creating inventory: %w", err)
+		}
+	} else {
+		if err := inventory.UpdateQuantity(quantity); err != nil {
+			return fmt.Errorf("updating quantity: %w", err)
+		}
+	}
+
+	if err := s.repo.Save(ctx, inventory); err != nil {
+		return fmt.Errorf("saving inventory: %w", err)
+	}
+
+	// Publish event
+	evt := event.NewInventoryEvent(
+		inventory.ItemID,
+		inventory.StoreID,
+		inventory.Quantity.Value(),
+		event.OperationUpdate,
+	)
+
+	if err := s.eventBus.PublishInventoryChange(ctx, evt); err != nil {
+		return fmt.Errorf("publishing event: %w", err)
+	}
+
+	return nil
+}
+
+func (s *inventoryService) GetStock(ctx context.Context, query dto.GetStockQuery) (*dto.InventoryDTO, error) {
+	inventory, err := s.repo.Find(ctx, query.ItemID, query.StoreID)
+	if err != nil {
+		return nil, fmt.Errorf("finding inventory: %w", err)
+	}
+
+	return &dto.InventoryDTO{
+		ItemID:    inventory.ItemID,
+		StoreID:   inventory.StoreID,
+		Quantity:  inventory.Quantity.Value(),
+		UpdatedAt: inventory.UpdatedAt.Format("2006-01-02T15:04:05Z07:00"),
+	}, nil
+}
+
+func (s *inventoryService) DeleteStock(ctx context.Context, cmd dto.DeleteStockCommand) error {
+	if err := s.repo.Delete(ctx, cmd.ItemID, cmd.StoreID); err != nil {
+		return fmt.Errorf("deleting inventory: %w", err)
+	}
+
+	evt := event.NewInventoryEvent(
+		cmd.ItemID,
+		cmd.StoreID,
+		0,
+		event.OperationDelete,
+	)
+
+	if err := s.eventBus.PublishInventoryChange(ctx, evt); err != nil {
+		return fmt.Errorf("publishing event: %w", err)
+	}
+
+	return nil
+}
