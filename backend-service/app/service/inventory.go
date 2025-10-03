@@ -2,32 +2,63 @@ package service
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/LudSkywalker/inventory-system/backend-service/app/dto"
+	"github.com/LudSkywalker/inventory-system/backend-service/infra/db"
 )
 
 type InventoryService struct {
-	operatorURL string
+	repo *db.HTTPRepository
 }
 
-func NewInventoryService() *InventoryService {
+func NewInventoryService(dbURL string) *InventoryService {
 	return &InventoryService{
-		operatorURL: "http://operator-service:8081",
+		repo: db.NewHTTPRepository(dbURL),
 	}
 }
 
 func (s *InventoryService) GetGlobalInventory(ctx context.Context) ([]dto.InventoryDTO, error) {
-	// Implementation to fetch from operator service
-	return nil, fmt.Errorf("not implemented")
+	inventories, err := s.repo.FindAll(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var dtos []dto.InventoryDTO
+	for _, inv := range inventories {
+		dtos = append(dtos, *inv)
+	}
+
+	return dtos, nil
 }
 
 func (s *InventoryService) GetStoreInventory(ctx context.Context, storeID string) ([]dto.InventoryDTO, error) {
-	// Implementation to fetch from operator service filtered by store
-	return nil, fmt.Errorf("not implemented")
+	inventories, err := s.repo.FindAll(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var dtos []dto.InventoryDTO
+	for _, inv := range inventories {
+		if inv.StoreID == storeID {
+			dtos = append(dtos, *inv)
+		}
+	}
+
+	return dtos, nil
 }
 
 func (s *InventoryService) GetItemInventory(ctx context.Context, itemID string) ([]dto.InventoryDTO, error) {
-	// Implementation to fetch from operator service filtered by item
-	return nil, fmt.Errorf("not implemented")
+	inventories, err := s.repo.FindAll(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var dtos []dto.InventoryDTO
+	for _, inv := range inventories {
+		if inv.ItemID == itemID {
+			dtos = append(dtos, *inv)
+		}
+	}
+
+	return dtos, nil
 }

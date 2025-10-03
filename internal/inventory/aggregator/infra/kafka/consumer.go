@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"os"
 
 	"github.com/LudSkywalker/inventory-system/internal/inventory/aggregator/app/service"
 	"github.com/LudSkywalker/inventory-system/internal/inventory/core/event"
@@ -20,6 +21,24 @@ type Consumer struct {
 func NewConsumer(brokers []string, processor *service.InventoryService) (*Consumer, error) {
 	config := sarama.NewConfig()
 	config.Consumer.Group.Rebalance.Strategy = sarama.BalanceStrategyRoundRobin
+
+	// Configure SASL authentication
+	if saslEnable := os.Getenv("SASL_ENABLE"); saslEnable == "true" {
+		config.Net.SASL.Enable = true
+		config.Net.SASL.User = os.Getenv("SASL_USER")
+		config.Net.SASL.Password = os.Getenv("SASL_PASSWORD")
+
+		if mechanism := os.Getenv("SASL_MECHANISM"); mechanism != "" {
+			config.Net.SASL.Mechanism = sarama.SASLMechanism(mechanism)
+		} else {
+			config.Net.SASL.Mechanism = sarama.SASLTypePlaintext
+		}
+
+		// Configure TLS for SASL
+		if tlsEnable := os.Getenv("TLS_ENABLE"); tlsEnable == "true" {
+			config.Net.TLS.Enable = true
+		}
+	}
 
 	consumer, err := sarama.NewConsumer(brokers, config)
 	if err != nil {

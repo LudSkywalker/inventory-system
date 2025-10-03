@@ -1,4 +1,4 @@
-FROM golang:1.25.1-alpine
+FROM golang:1.25-alpine
 
 WORKDIR /app
 
@@ -11,7 +11,7 @@ RUN go mod download
 COPY . .
 
 # Build the application
-RUN go build -o main ./store-service/cmd/main.go
+RUN CGO_CFLAGS="-D_LARGEFILE64_SOURCE" go build -o main ./db-service/cmd/main.go
 
 # Run the application
 CMD ["./main"]

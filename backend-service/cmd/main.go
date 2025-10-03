@@ -11,7 +11,12 @@ import (
 
 func main() {
 	// Initialize services
-	inventoryService := service.NewInventoryService()
+	dbURL := os.Getenv("DB_URL")
+	if dbURL == "" {
+		log.Fatalf("DB_URL environment variable is required")
+	}
+
+	inventoryService := service.NewInventoryService(dbURL)
 	handler := http.NewInventoryHandler(inventoryService)
 
 	// Initialize Fiber app
