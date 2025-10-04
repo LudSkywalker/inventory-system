@@ -28,7 +28,7 @@
 // @license.url http://www.apache.org/licenses/LICENSE-2.0.html
 
 // @host localhost:8081
-// @BasePath /api/v1
+// @BasePath /
 // @schemes http https
 
 // @externalDocs.description OpenAPI

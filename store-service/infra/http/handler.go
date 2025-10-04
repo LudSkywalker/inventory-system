@@ -1,6 +1,8 @@
 package http
 
 import (
+	"log"
+
 	"github.com/LudSkywalker/inventory-system/store-service/app/dto"
 	port "github.com/LudSkywalker/inventory-system/store-service/app/port/input"
 	"github.com/gofiber/fiber/v2"
@@ -37,17 +39,21 @@ func (h *InventoryHandler) RegisterRoutes(app *fiber.App) {
 func (h *InventoryHandler) UpdateStock(c *fiber.Ctx) error {
 	var req dto.UpdateStockCommand
 	if err := c.BodyParser(&req); err != nil {
+		log.Printf("UpdateStock: Invalid request body: %v", err)
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "Invalid request body",
 		})
 	}
 
+	log.Printf("UpdateStock: Updating item %s in store %s to quantity %d", req.ItemID, req.StoreID, req.Quantity)
 	if err := h.useCase.UpdateStock(c.Context(), req); err != nil {
+		log.Printf("UpdateStock: Error updating stock: %v", err)
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": err.Error(),
 		})
 	}
 
+	log.Printf("UpdateStock: Successfully updated item %s in store %s", req.ItemID, req.StoreID)
 	return c.SendStatus(fiber.StatusOK)
 }
 
@@ -68,13 +74,16 @@ func (h *InventoryHandler) GetStock(c *fiber.Ctx) error {
 		ItemID:  c.Params("itemId"),
 	}
 
+	log.Printf("GetStock: Retrieving item %s from store %s", query.ItemID, query.StoreID)
 	inventory, err := h.useCase.GetStock(c.Context(), query)
 	if err != nil {
+		log.Printf("GetStock: Error retrieving stock: %v", err)
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": err.Error(),
 		})
 	}
 
+	log.Printf("GetStock: Successfully retrieved item %s from store %s with quantity %d", query.ItemID, query.StoreID, inventory.Quantity)
 	return c.JSON(inventory)
 }
 
@@ -88,13 +97,16 @@ func (h *InventoryHandler) GetStock(c *fiber.Ctx) error {
 // @Failure 500 {object} map[string]string
 // @Router /api/v1/inventory [get]
 func (h *InventoryHandler) ListInventory(c *fiber.Ctx) error {
+	log.Println("ListInventory: Retrieving all inventory items")
 	inventories, err := h.useCase.ListInventory(c.Context())
 	if err != nil {
+		log.Printf("ListInventory: Error retrieving inventory list: %v", err)
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": err.Error(),
 		})
 	}
 
+	log.Printf("ListInventory: Successfully retrieved %d inventory items", len(inventories))
 	return c.JSON(inventories)
 }
 
@@ -115,11 +127,14 @@ func (h *InventoryHandler) DeleteStock(c *fiber.Ctx) error {
 		ItemID:  c.Params("itemId"),
 	}
 
+	log.Printf("DeleteStock: Deleting item %s from store %s", cmd.ItemID, cmd.StoreID)
 	if err := h.useCase.DeleteStock(c.Context(), cmd); err != nil {
+		log.Printf("DeleteStock: Error deleting stock: %v", err)
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": err.Error(),
 		})
 	}
 
+	log.Printf("DeleteStock: Successfully deleted item %s from store %s", cmd.ItemID, cmd.StoreID)
 	return c.SendStatus(fiber.StatusOK)
 }

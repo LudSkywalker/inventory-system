@@ -32,11 +32,12 @@ func (s *inventoryService) UpdateStock(ctx context.Context, cmd dto.UpdateStockC
 	inventory, err := s.repo.Find(ctx, cmd.ItemID, cmd.StoreID)
 	if err != nil {
 		// If not found, create new inventory
-		inventory, err = entity.NewInventory(cmd.ItemID, cmd.StoreID, quantity)
+		inventory, err = entity.NewInventory(cmd.ItemID, cmd.ItemName, cmd.StoreID, quantity)
 		if err != nil {
 			return fmt.Errorf("creating inventory: %w", err)
 		}
 	} else {
+		inventory.ItemName = cmd.ItemName
 		if err := inventory.UpdateQuantity(quantity); err != nil {
 			return fmt.Errorf("updating quantity: %w", err)
 		}
@@ -49,6 +50,7 @@ func (s *inventoryService) UpdateStock(ctx context.Context, cmd dto.UpdateStockC
 	// Publish event
 	evt := event.NewInventoryEvent(
 		inventory.ItemID,
+		inventory.ItemName,
 		inventory.StoreID,
 		inventory.Quantity.Value(),
 		event.OperationUpdate,
@@ -69,6 +71,7 @@ func (s *inventoryService) GetStock(ctx context.Context, query dto.GetStockQuery
 
 	return &dto.InventoryDTO{
 		ItemID:    inventory.ItemID,
+		ItemName:  inventory.ItemName,
 		StoreID:   inventory.StoreID,
 		Quantity:  inventory.Quantity.Value(),
 		UpdatedAt: inventory.UpdatedAt.Format("2006-01-02T15:04:05Z07:00"),
@@ -85,6 +88,7 @@ func (s *inventoryService) ListInventory(ctx context.Context) ([]*dto.InventoryD
 	for _, inventory := range inventories {
 		result = append(result, &dto.InventoryDTO{
 			ItemID:    inventory.ItemID,
+			ItemName:  inventory.ItemName,
 			StoreID:   inventory.StoreID,
 			Quantity:  inventory.Quantity.Value(),
 			UpdatedAt: inventory.UpdatedAt.Format("2006-01-02T15:04:05Z07:00"),
@@ -103,6 +107,7 @@ func (s *inventoryService) SyncAllInventories(ctx context.Context) error {
 	for _, inventory := range inventories {
 		evt := event.NewInventoryEvent(
 			inventory.ItemID,
+			inventory.ItemName,
 			inventory.StoreID,
 			inventory.Quantity.Value(),
 			event.OperationUpdate, // Use UPDATE for sync
@@ -123,6 +128,7 @@ func (s *inventoryService) DeleteStock(ctx context.Context, cmd dto.DeleteStockC
 
 	evt := event.NewInventoryEvent(
 		cmd.ItemID,
+		"", // ItemName not needed for delete
 		cmd.StoreID,
 		0,
 		event.OperationDelete,

@@ -22,6 +22,7 @@ func (h *InventoryHandler) RegisterRoutes(app *fiber.App) {
 	group.Get("/inventory", h.GetGlobalInventory)
 	group.Get("/inventory/store/:storeId", h.GetStoreInventory)
 	group.Get("/inventory/item/:itemId", h.GetItemInventory)
+	group.Get("/inventory/grouped", h.GetGroupedInventory)
 
 	// Health check endpoint
 	app.Get("/health", h.HealthCheck)
@@ -109,4 +110,24 @@ func (h *InventoryHandler) GetItemInventory(c *fiber.Ctx) error {
 	}
 
 	return c.JSON(inventories)
+}
+
+// GetGroupedInventory godoc
+// @Summary Get grouped inventory
+// @Description Get all inventory items grouped by item ID with total quantity and store details
+// @Tags inventory
+// @Accept json
+// @Produce json
+// @Success 200 {array} dto.GroupedInventoryDTO
+// @Failure 500 {object} map[string]string
+// @Router /api/v1/inventory/grouped [get]
+func (h *InventoryHandler) GetGroupedInventory(c *fiber.Ctx) error {
+	groupedInventories, err := h.service.GetGroupedInventory(c.Context())
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	return c.JSON(groupedInventories)
 }

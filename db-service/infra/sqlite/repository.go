@@ -20,9 +20,10 @@ func NewSQLiteRepository(db *sql.DB) *SQLiteRepository {
 
 func (r *SQLiteRepository) Save(ctx context.Context, inventory *entity.GlobalInventory) error {
 	query := `
-		INSERT INTO global_inventories (item_id, store_id, quantity, updated_at, version)
-		VALUES (?, ?, ?, ?, ?)
+		INSERT INTO global_inventories (item_id, item_name, store_id, quantity, updated_at, version)
+		VALUES (?, ?, ?, ?, ?, ?)
 		ON CONFLICT(item_id, store_id) DO UPDATE SET
+		item_name = ?,
 		quantity = ?,
 		updated_at = ?,
 		version = version + 1
@@ -30,10 +31,12 @@ func (r *SQLiteRepository) Save(ctx context.Context, inventory *entity.GlobalInv
 
 	_, err := r.db.ExecContext(ctx, query,
 		inventory.ItemID,
+		inventory.ItemName,
 		inventory.StoreID,
 		inventory.Quantity,
 		inventory.UpdatedAt,
 		inventory.Version,
+		inventory.ItemName,
 		inventory.Quantity,
 		inventory.UpdatedAt,
 	)
@@ -47,7 +50,7 @@ func (r *SQLiteRepository) Save(ctx context.Context, inventory *entity.GlobalInv
 
 func (r *SQLiteRepository) FindByItemAndStore(ctx context.Context, itemID, storeID string) (*entity.GlobalInventory, error) {
 	query := `
-		SELECT item_id, store_id, quantity, updated_at, version
+		SELECT item_id, item_name, store_id, quantity, updated_at, version
 		FROM global_inventories
 		WHERE item_id = ? AND store_id = ?
 	`
@@ -57,6 +60,7 @@ func (r *SQLiteRepository) FindByItemAndStore(ctx context.Context, itemID, store
 
 	err := r.db.QueryRowContext(ctx, query, itemID, storeID).Scan(
 		&inventory.ItemID,
+		&inventory.ItemName,
 		&inventory.StoreID,
 		&inventory.Quantity,
 		&updatedAt,
@@ -77,7 +81,7 @@ func (r *SQLiteRepository) FindByItemAndStore(ctx context.Context, itemID, store
 
 func (r *SQLiteRepository) FindAll(ctx context.Context) ([]*entity.GlobalInventory, error) {
 	query := `
-		SELECT item_id, store_id, quantity, updated_at, version
+		SELECT item_id, item_name, store_id, quantity, updated_at, version
 		FROM global_inventories
 	`
 
@@ -94,6 +98,7 @@ func (r *SQLiteRepository) FindAll(ctx context.Context) ([]*entity.GlobalInvento
 
 		err := rows.Scan(
 			&inventory.ItemID,
+			&inventory.ItemName,
 			&inventory.StoreID,
 			&inventory.Quantity,
 			&updatedAt,
@@ -139,6 +144,7 @@ func InitDB(db *sql.DB) error {
 	query := `
 		CREATE TABLE IF NOT EXISTS global_inventories (
 			item_id TEXT NOT NULL,
+			item_name TEXT NOT NULL,
 			store_id TEXT NOT NULL,
 			quantity INTEGER NOT NULL,
 			updated_at TIMESTAMP NOT NULL,

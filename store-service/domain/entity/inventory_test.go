@@ -11,11 +11,12 @@ import (
 func TestNewInventory(t *testing.T) {
 	// Given
 	itemID := "item1"
+	itemName := "Item 1"
 	storeID := "store1"
 	quantity, _ := valueobject.NewQuantity(10)
 
 	// When
-	inventory, err := entity.NewInventory(itemID, storeID, quantity)
+	inventory, err := entity.NewInventory(itemID, itemName, storeID, quantity)
 
 	// Then
 	if err != nil {
@@ -24,6 +25,10 @@ func TestNewInventory(t *testing.T) {
 
 	if inventory.ItemID != itemID {
 		t.Errorf("Expected ItemID %s, got %s", itemID, inventory.ItemID)
+	}
+
+	if inventory.ItemName != itemName {
+		t.Errorf("Expected ItemName %s, got %s", itemName, inventory.ItemName)
 	}
 
 	if inventory.StoreID != storeID {
@@ -41,7 +46,7 @@ func TestNewInventory(t *testing.T) {
 
 func TestUpdateQuantity(t *testing.T) {
 	// Given
-	inventory, _ := entity.NewInventory("item1", "store1", valueobject.Quantity{})
+	inventory, _ := entity.NewInventory("item1", "Item 1", "store1", valueobject.Quantity{})
 	newQuantity, _ := valueobject.NewQuantity(20)
 	oldUpdatedAt := inventory.UpdatedAt
 

@@ -7,15 +7,17 @@ import (
 // GlobalInventory represents the global state of an inventory item
 type GlobalInventory struct {
 	ItemID    string
+	ItemName  string
 	StoreID   string
 	Quantity  int
 	UpdatedAt time.Time
 	Version   int64
 }
 
-func NewGlobalInventory(itemID, storeID string, quantity int) *GlobalInventory {
+func NewGlobalInventory(itemID, itemName, storeID string, quantity int) *GlobalInventory {
 	return &GlobalInventory{
 		ItemID:    itemID,
+		ItemName:  itemName,
 		StoreID:   storeID,
 		Quantity:  quantity,
 		UpdatedAt: time.Now(),

@@ -24,6 +24,7 @@ func (h *GlobalInventoryHandler) RegisterRoutes(app *fiber.App) {
 func (h *GlobalInventoryHandler) Save(c *fiber.Ctx) error {
 	var req struct {
 		ItemID   string `json:"item_id"`
+		ItemName string `json:"item_name"`
 		StoreID  string `json:"store_id"`
 		Quantity int    `json:"quantity"`
 	}
@@ -32,7 +33,7 @@ func (h *GlobalInventoryHandler) Save(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"error": "invalid request"})
 	}
 
-	inventory := entity.NewGlobalInventory(req.ItemID, req.StoreID, req.Quantity)
+	inventory := entity.NewGlobalInventory(req.ItemID, req.ItemName, req.StoreID, req.Quantity)
 
 	if err := h.repo.Save(c.Context(), inventory); err != nil {
 		return c.Status(500).JSON(fiber.Map{"error": err.Error()})

@@ -20,18 +20,21 @@ func NewSQLiteRepository(db *sql.DB) *SQLiteRepository {
 
 func (r *SQLiteRepository) Save(ctx context.Context, inventory *entity.Inventory) error {
 	query := `
-		INSERT INTO inventories (item_id, store_id, quantity, updated_at)
-		VALUES (?, ?, ?, ?)
+		INSERT INTO inventories (item_id, item_name, store_id, quantity, updated_at)
+		VALUES (?, ?, ?, ?, ?)
 		ON CONFLICT(item_id, store_id) DO UPDATE SET
+		item_name = ?,
 		quantity = ?,
 		updated_at = ?
 	`
 
 	_, err := r.db.ExecContext(ctx, query,
 		inventory.ItemID,
+		inventory.ItemName,
 		inventory.StoreID,
 		inventory.Quantity.Value(),
 		inventory.UpdatedAt,
+		inventory.ItemName,
 		inventory.Quantity.Value(),
 		inventory.UpdatedAt,
 	)
@@ -45,7 +48,7 @@ func (r *SQLiteRepository) Save(ctx context.Context, inventory *entity.Inventory
 
 func (r *SQLiteRepository) Find(ctx context.Context, itemID, storeID string) (*entity.Inventory, error) {
 	query := `
-		SELECT item_id, store_id, quantity, updated_at
+		SELECT item_id, item_name, store_id, quantity, updated_at
 		FROM inventories
 		WHERE item_id = ? AND store_id = ?
 	`
@@ -55,6 +58,7 @@ func (r *SQLiteRepository) Find(ctx context.Context, itemID, storeID string) (*e
 
 	err := r.db.QueryRowContext(ctx, query, itemID, storeID).Scan(
 		&inventory.ItemID,
+		&inventory.ItemName,
 		&inventory.StoreID,
 		&quantityValue,
 		&inventory.UpdatedAt,
@@ -79,7 +83,7 @@ func (r *SQLiteRepository) Find(ctx context.Context, itemID, storeID string) (*e
 
 func (r *SQLiteRepository) List(ctx context.Context) ([]*entity.Inventory, error) {
 	query := `
-		SELECT item_id, store_id, quantity, updated_at
+		SELECT item_id, item_name, store_id, quantity, updated_at
 		FROM inventories
 		ORDER BY updated_at DESC
 	`
@@ -97,6 +101,7 @@ func (r *SQLiteRepository) List(ctx context.Context) ([]*entity.Inventory, error
 
 		err := rows.Scan(
 			&inventory.ItemID,
+			&inventory.ItemName,
 			&inventory.StoreID,
 			&quantityValue,
 			&inventory.UpdatedAt,
@@ -146,6 +151,7 @@ func InitDB(db *sql.DB) error {
 	query := `
 		CREATE TABLE IF NOT EXISTS inventories (
 			item_id TEXT NOT NULL,
+			item_name TEXT NOT NULL,
 			store_id TEXT NOT NULL,
 			quantity INTEGER NOT NULL,
 			updated_at TIMESTAMP NOT NULL,

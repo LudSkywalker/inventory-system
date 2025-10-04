@@ -28,9 +28,10 @@ func NewHTTPRepository(baseURL string) *HTTPRepository {
 
 func (r *HTTPRepository) Save(ctx context.Context, inventory *entity.GlobalInventory) error {
 	reqBody := map[string]interface{}{
-		"item_id":  inventory.ItemID,
-		"store_id": inventory.StoreID,
-		"quantity": inventory.Quantity,
+		"item_id":   inventory.ItemID,
+		"item_name": inventory.ItemName,
+		"store_id":  inventory.StoreID,
+		"quantity":  inventory.Quantity,
 	}
 
 	jsonData, err := json.Marshal(reqBody)
@@ -85,6 +86,10 @@ func (r *HTTPRepository) FindByItemAndStore(ctx context.Context, itemID, storeID
 	if err := json.NewDecoder(resp.Body).Decode(&inventory); err != nil {
 		return nil, fmt.Errorf("decoding response: %w", err)
 	}
+
+	// Set IDs from URL parameters since response might not include them
+	inventory.ItemID = itemID
+	inventory.StoreID = storeID
 
 	return &inventory, nil
 }

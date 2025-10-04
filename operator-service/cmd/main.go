@@ -18,6 +18,7 @@ func main() {
 	if dbURL == "" {
 		log.Fatalf("DB_URL environment variable is required")
 	}
+	log.Printf("Using DB_URL: %s", dbURL)
 
 	repo := http.NewHTTPRepository(dbURL)
 	inventoryService := service.NewGlobalInventoryService(repo)

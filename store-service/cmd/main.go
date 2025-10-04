@@ -43,6 +43,12 @@ import (
 
 func main() {
 	// Initialize SQLite
+	dbMode := os.Getenv("DB_MODE")
+	if dbMode == "" {
+		dbMode = "memory"
+	}
+	log.Printf("Using DB_MODE: %s", dbMode)
+
 	db, err := sql.Open("sqlite3", ":memory:")
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
@@ -80,6 +86,7 @@ func main() {
 	inventoryHandler.RegisterRoutes(app)
 
 	// Swagger routes
+	log.Println("Setting up Swagger routes")
 	app.Get("/swagger/doc.json", func(c *fiber.Ctx) error {
 		return c.SendFile("./docs/swagger.json")
 	})

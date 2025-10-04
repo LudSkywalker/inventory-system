@@ -13,18 +13,20 @@ var (
 
 type Inventory struct {
 	ItemID    string
+	ItemName  string
 	StoreID   string
 	Quantity  valueobject.Quantity
 	UpdatedAt time.Time
 }
 
-func NewInventory(itemID, storeID string, quantity valueobject.Quantity) (*Inventory, error) {
+func NewInventory(itemID, itemName, storeID string, quantity valueobject.Quantity) (*Inventory, error) {
 	if itemID == "" || storeID == "" {
 		return nil, errors.New("item ID and store ID are required")
 	}
 
 	return &Inventory{
 		ItemID:    itemID,
+		ItemName:  itemName,
 		StoreID:   storeID,
 		Quantity:  quantity,
 		UpdatedAt: time.Now(),

@@ -22,10 +22,12 @@ func NewGlobalInventoryService(repo output.GlobalInventoryRepository) *globalInv
 
 func (s *globalInventoryService) ProcessInventoryEvent(ctx context.Context, eventDTO dto.GlobalInventoryDTO) error {
 	inventory, err := s.repo.FindByItemAndStore(ctx, eventDTO.ItemID, eventDTO.StoreID)
+	fmt.Printf("Data is %v", inventory)
 	if err != nil {
 		// If not found, create new inventory
-		inventory = entity.NewGlobalInventory(eventDTO.ItemID, eventDTO.StoreID, eventDTO.Quantity)
+		inventory = entity.NewGlobalInventory(eventDTO.ItemID, eventDTO.ItemName, eventDTO.StoreID, eventDTO.Quantity)
 	} else {
+		inventory.ItemName = eventDTO.ItemName
 		inventory.UpdateQuantity(eventDTO.Quantity)
 	}
 
@@ -44,6 +46,7 @@ func (s *globalInventoryService) GetGlobalInventory(ctx context.Context, itemID,
 
 	return &dto.GlobalInventoryDTO{
 		ItemID:    inventory.ItemID,
+		ItemName:  inventory.ItemName,
 		StoreID:   inventory.StoreID,
 		Quantity:  inventory.Quantity,
 		UpdatedAt: inventory.UpdatedAt.Format(time.RFC3339),
@@ -61,6 +64,7 @@ func (s *globalInventoryService) GetAllInventories(ctx context.Context) ([]*dto.
 	for i, inventory := range inventories {
 		dtos[i] = &dto.GlobalInventoryDTO{
 			ItemID:    inventory.ItemID,
+			ItemName:  inventory.ItemName,
 			StoreID:   inventory.StoreID,
 			Quantity:  inventory.Quantity,
 			UpdatedAt: inventory.UpdatedAt.Format(time.RFC3339),

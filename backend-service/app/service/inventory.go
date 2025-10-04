@@ -66,3 +66,34 @@ func (s *InventoryService) GetItemInventory(ctx context.Context, itemID string) 
 
 	return dtos, nil
 }
+
+func (s *InventoryService) GetGroupedInventory(ctx context.Context) ([]dto.GroupedInventoryDTO, error) {
+	inventories, err := s.repo.FindAll(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	grouped := make(map[string]*dto.GroupedInventoryDTO)
+	for _, inv := range inventories {
+		if grouped[inv.ItemID] == nil {
+			grouped[inv.ItemID] = &dto.GroupedInventoryDTO{
+				ItemID:        inv.ItemID,
+				ItemName:      inv.ItemName,
+				TotalQuantity: 0,
+				Stores:        []dto.StoreInventory{},
+			}
+		}
+		grouped[inv.ItemID].TotalQuantity += inv.Quantity
+		grouped[inv.ItemID].Stores = append(grouped[inv.ItemID].Stores, dto.StoreInventory{
+			StoreID:  inv.StoreID,
+			Quantity: inv.Quantity,
+		})
+	}
+
+	var result []dto.GroupedInventoryDTO
+	for _, g := range grouped {
+		result = append(result, *g)
+	}
+
+	return result, nil
+}

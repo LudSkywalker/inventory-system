@@ -48,6 +48,7 @@ func (r *HTTPRepository) FindAll(ctx context.Context) ([]*dto.InventoryDTO, erro
 
 	var inventories []struct {
 		ItemID    string    `json:"item_id"`
+		ItemName  string    `json:"item_name"`
 		StoreID   string    `json:"store_id"`
 		Quantity  int       `json:"quantity"`
 		UpdatedAt time.Time `json:"updated_at"`

@@ -63,21 +63,8 @@ func (c *Consumer) Start(ctx context.Context) error {
 	for {
 		select {
 		case msg := <-partitionConsumer.Messages():
-			var event event.InventoryEvent
-			if err := json.Unmarshal(msg.Value, &event); err != nil {
-				log.Printf("Error unmarshaling event: %v", err)
-				continue
-			}
-
-			dto := dto.GlobalInventoryDTO{
-				ItemID:    event.ItemID,
-				StoreID:   event.StoreID,
-				Quantity:  event.Quantity,
-				UpdatedAt: event.Timestamp.Format("2006-01-02T15:04:05Z07:00"),
-			}
-
-			if err := c.useCase.ProcessInventoryEvent(ctx, dto); err != nil {
-				log.Printf("Error processing event: %v", err)
+			if err := c.processMessage(ctx, msg); err != nil {
+				log.Printf("Error processing message: %v", err)
 			}
 
 		case err := <-partitionConsumer.Errors():
@@ -91,4 +78,34 @@ func (c *Consumer) Start(ctx context.Context) error {
 
 func (c *Consumer) Close() error {
 	return c.consumer.Close()
+}
+
+func (c *Consumer) processMessage(ctx context.Context, msg *sarama.ConsumerMessage) error {
+	// Validate message payload
+	if msg.Value == nil || len(msg.Value) == 0 {
+		return fmt.Errorf("received empty or nil message at partition %d, offset %d", msg.Partition, msg.Offset)
+	}
+
+	var event event.InventoryEvent
+	if err := json.Unmarshal(msg.Value, &event); err != nil {
+		log.Printf("Failed to unmarshal event, raw JSON data: %s", string(msg.Value))
+		return fmt.Errorf("failed to unmarshal event at partition %d, offset %d: %w", msg.Partition, msg.Offset, err)
+	}
+
+	// Basic validation of the event
+	if event.ItemID == "" {
+		return fmt.Errorf("invalid event: missing ItemID at partition %d, offset %d", msg.Partition, msg.Offset)
+	}
+
+	// Convert to DTO
+	dto := dto.GlobalInventoryDTO{
+		ItemID:    event.ItemID,
+		ItemName:  event.ItemName,
+		StoreID:   event.StoreID,
+		Quantity:  event.Quantity,
+		UpdatedAt: event.Timestamp.Format("2006-01-02T15:04:05Z07:00"),
+	}
+
+	// Process the event
+	return c.useCase.ProcessInventoryEvent(ctx, dto)
 }

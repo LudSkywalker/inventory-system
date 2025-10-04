@@ -10,8 +10,14 @@ RUN go mod download
 
 COPY . .
 
-# Ensure docs directory exists and copy pre-generated docs
+# Ensure docs directory exists
 RUN mkdir -p backend-service/docs
+
+# Generate Swagger docs
+RUN swag init --dir ./backend-service -g ./cmd/main.go -o ./backend-service/docs
+
+# Copy generated swagger.json to docs.json
+RUN cp backend-service/docs/swagger.json backend-service/docs/docs.json
 
 # Build the application
 RUN go build -o main ./backend-service/cmd/main.go
