@@ -1,4 +1,4 @@
-FROM golang:1.25.1-alpine
+FROM golang:1.25.1
 
 WORKDIR /app
 
@@ -18,6 +18,9 @@ RUN swag init --dir ./backend-service -g ./cmd/main.go -o ./backend-service/docs
 
 # Copy generated swagger.json to docs.json
 RUN cp backend-service/docs/swagger.json backend-service/docs/docs.json
+
+# Run tests
+RUN go test ./...
 
 # Build the application
 RUN go build -o main ./backend-service/cmd/main.go

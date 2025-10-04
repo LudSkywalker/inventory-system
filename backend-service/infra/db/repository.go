@@ -65,6 +65,7 @@ func (r *HTTPRepository) FindAll(ctx context.Context) ([]*dto.InventoryDTO, erro
 	for _, inv := range inventories {
 		dtos = append(dtos, &dto.InventoryDTO{
 			ItemID:    inv.ItemID,
+			ItemName:  inv.ItemName,
 			StoreID:   inv.StoreID,
 			Quantity:  inv.Quantity,
 			UpdatedAt: inv.UpdatedAt.Format(time.RFC3339),

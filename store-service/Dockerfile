@@ -1,4 +1,4 @@
-FROM golang:1.25.1-alpine
+FROM golang:1.25.1
 
 WORKDIR /app
 
@@ -7,7 +7,7 @@ ENV CGO_ENABLED=1
 ENV CGO_CFLAGS="-D_LARGEFILE64_SOURCE"
 
 # Install SQLite and build dependencies
-RUN apk add --no-cache gcc musl-dev sqlite-dev libc6-compat
+RUN apt-get update && apt-get install -y gcc libc6-dev sqlite3 libsqlite3-dev && rm -rf /var/lib/apt/lists/*
 
 # Install swag
 RUN go install github.com/swaggo/swag/cmd/swag@latest
@@ -16,6 +16,9 @@ COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . .
+
+# Run tests
+RUN go test ./...
 
 # Generate Swagger docs
 RUN swag init --dir ./store-service -g ./cmd/main.go -o ./docs

@@ -58,6 +58,7 @@ func TestGlobalInventoryService(t *testing.T) {
 	t.Run("ProcessInventoryEvent", func(t *testing.T) {
 		eventDTO := dto.GlobalInventoryDTO{
 			ItemID:    "item1",
+			ItemName:  "Item 1",
 			StoreID:   "store1",
 			Quantity:  10,
 			UpdatedAt: time.Now().Format(time.RFC3339),

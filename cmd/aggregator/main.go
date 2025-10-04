@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/LudSkywalker/inventory-system/internal/inventory/aggregator/app/service"
-	"github.com/LudSkywalker/inventory-system/internal/inventory/aggregator/domain"
+	aggService "github.com/LudSkywalker/inventory-system/internal/inventory/aggregator/domain/service"
 	"github.com/LudSkywalker/inventory-system/internal/inventory/aggregator/infra/http"
 	"github.com/LudSkywalker/inventory-system/internal/inventory/aggregator/infra/kafka"
 	"github.com/LudSkywalker/inventory-system/internal/inventory/aggregator/infra/sqlite"
@@ -30,7 +30,7 @@ func main() {
 
 	// Initialize repositories and services
 	repo := sqlite.NewSQLiteRepository(db)
-	aggregatorService := domain.NewAggregatorService(repo)
+	aggregatorService := aggService.NewAggregatorService(repo)
 	inventoryService := service.NewInventoryService(aggregatorService)
 	handler := http.NewGlobalInventoryHandler(inventoryService)
 

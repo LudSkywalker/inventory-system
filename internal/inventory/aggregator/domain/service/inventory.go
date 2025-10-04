@@ -19,7 +19,7 @@ func NewAggregatorService(repo domain.Repository) *AggregatorService {
 }
 
 func (s *AggregatorService) ProcessInventoryEvent(ctx context.Context, event event.InventoryEvent) error {
-	if event.Operation == event.OperationDelete {
+	if event.Operation == "DELETE" {
 		// For delete operations, we might want to keep the record but mark it as deleted
 		// or implement a soft delete mechanism
 		inventory := domain.NewGlobalInventory(event.ItemID, event.StoreID, 0)

@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/LudSkywalker/inventory-system/internal/inventory/core/event"
 	"github.com/LudSkywalker/inventory-system/internal/inventory/core/valueobject"
@@ -42,13 +43,15 @@ func (s *InventoryService) UpdateStock(ctx context.Context, itemID, storeID stri
 	}
 
 	// Publish event
-	evt := event.NewInventoryEvent(
-		inv.ItemID,
-		inv.StoreID,
-		inv.Quantity.Value(),
-		event.OperationUpdate,
-		inv.Version,
-	)
+	evt := &event.InventoryEvent{
+		EventID:   "", // TODO: generate event ID
+		ItemID:    inv.ItemID,
+		StoreID:   inv.StoreID,
+		Quantity:  inv.Quantity.Value(),
+		Operation: event.OperationUpdate,
+		Timestamp: time.Now(),
+		Version:   inv.Version,
+	}
 
 	if err := s.eventBus.PublishInventoryChange(ctx, evt); err != nil {
 		return fmt.Errorf("publishing event: %w", err)

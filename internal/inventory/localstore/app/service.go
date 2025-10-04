@@ -4,7 +4,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/LudSkywalker/inventory-system/internal/inventory/core/entity"
 	"github.com/LudSkywalker/inventory-system/internal/inventory/core/event"
 	"github.com/LudSkywalker/inventory-system/internal/inventory/core/valueobject"
 	"github.com/LudSkywalker/inventory-system/internal/inventory/localstore/domain"
@@ -36,10 +35,7 @@ func (s *InventoryService) UpdateInventory(ctx context.Context, cmd UpdateInvent
 		return err
 	}
 
-	inventory, err := entity.NewInventory(cmd.ItemID, cmd.StoreID, quantity)
-	if err != nil {
-		return err
-	}
+	inventory := domain.NewInventory(cmd.ItemID, cmd.StoreID, quantity)
 
 	if err := s.repo.Save(ctx, inventory); err != nil {
 		return err
@@ -57,8 +53,8 @@ func (s *InventoryService) UpdateInventory(ctx context.Context, cmd UpdateInvent
 	return s.events.PublishInventoryChange(ctx, evt)
 }
 
-func (s *InventoryService) GetInventory(ctx context.Context, itemID, storeID string) (*entity.Inventory, error) {
-	return s.repo.FindByItemAndStore(ctx, itemID, storeID)
+func (s *InventoryService) GetInventory(ctx context.Context, itemID, storeID string) (*domain.Inventory, error) {
+	return s.repo.Find(ctx, itemID, storeID)
 }
 
 func (s *InventoryService) DeleteInventory(ctx context.Context, itemID, storeID string) error {

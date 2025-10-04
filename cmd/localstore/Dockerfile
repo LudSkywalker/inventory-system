@@ -1,9 +1,9 @@
-FROM golang:1.25.1-alpine
+FROM golang:1.25.1
 
 WORKDIR /app
 
 # Install required system dependencies
-RUN apk add --no-cache gcc musl-dev sqlite
+RUN apt-get update && apt-get install -y gcc libc6-dev sqlite3 && rm -rf /var/lib/apt/lists/*
 
 # Copy go mod files
 COPY go.mod go.sum ./

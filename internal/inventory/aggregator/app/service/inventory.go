@@ -6,14 +6,15 @@ import (
 
 	"github.com/LudSkywalker/inventory-system/internal/inventory/aggregator/app/dto"
 	"github.com/LudSkywalker/inventory-system/internal/inventory/aggregator/domain"
+	"github.com/LudSkywalker/inventory-system/internal/inventory/aggregator/domain/service"
 	"github.com/LudSkywalker/inventory-system/internal/inventory/core/event"
 )
 
 type InventoryService struct {
-	aggregator *domain.AggregatorService
+	aggregator *service.AggregatorService
 }
 
-func NewInventoryService(aggregator *domain.AggregatorService) *InventoryService {
+func NewInventoryService(aggregator *service.AggregatorService) *InventoryService {
 	return &InventoryService{
 		aggregator: aggregator,
 	}

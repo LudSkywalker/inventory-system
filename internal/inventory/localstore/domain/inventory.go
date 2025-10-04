@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/LudSkywalker/inventory-system/internal/inventory/core/entity"
 	"github.com/LudSkywalker/inventory-system/internal/inventory/core/event"
 	"github.com/LudSkywalker/inventory-system/internal/inventory/core/valueobject"
 )
@@ -17,7 +18,7 @@ type Repository interface {
 
 // EventPublisher defines the interface for publishing inventory events
 type EventPublisher interface {
-	PublishInventoryChange(ctx context.Context, event event.InventoryEvent) error
+	PublishInventoryChange(ctx context.Context, event *event.InventoryEvent) error
 }
 
 // Inventory represents the local inventory aggregate
@@ -43,7 +44,7 @@ func NewInventory(itemID, storeID string, quantity valueobject.Quantity) *Invent
 // UpdateQuantity updates the inventory quantity and timestamp
 func (i *Inventory) UpdateQuantity(q valueobject.Quantity) error {
 	if !q.IsValid() {
-		return ErrInvalidQuantity
+		return entity.ErrInvalidQuantity
 	}
 	i.Quantity = q
 	i.UpdatedAt = time.Now()

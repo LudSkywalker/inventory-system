@@ -16,6 +16,24 @@ func NewSQLiteRepository(db *sql.DB) *SQLiteRepository {
 	return &SQLiteRepository{db: db}
 }
 
+func InitDB(db *sql.DB) error {
+	query := `
+		CREATE TABLE IF NOT EXISTS global_inventories (
+			item_id TEXT NOT NULL,
+			store_id TEXT NOT NULL,
+			quantity INTEGER NOT NULL DEFAULT 0,
+			updated_at DATETIME NOT NULL,
+			version INTEGER NOT NULL DEFAULT 1,
+			PRIMARY KEY (item_id, store_id)
+		);
+	`
+	_, err := db.Exec(query)
+	if err != nil {
+		return fmt.Errorf("error creating global_inventories table: %w", err)
+	}
+	return nil
+}
+
 func (r *SQLiteRepository) Save(ctx context.Context, inventory *domain.GlobalInventory) error {
 	query := `
 		INSERT INTO global_inventories (item_id, store_id, quantity, updated_at, version)

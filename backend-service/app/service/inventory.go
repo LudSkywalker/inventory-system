@@ -8,19 +8,23 @@ import (
 	"github.com/LudSkywalker/inventory-system/backend-service/infra/db"
 )
 
+type InventoryRepository interface {
+	FindAll(ctx context.Context) ([]*dto.InventoryDTO, error)
+}
+
 type InventoryService struct {
-	repo *db.HTTPRepository
+	Repo InventoryRepository
 }
 
 func NewInventoryService(dbURL string) *InventoryService {
 	return &InventoryService{
-		repo: db.NewHTTPRepository(dbURL),
+		Repo: db.NewHTTPRepository(dbURL),
 	}
 }
 
 func (s *InventoryService) GetGlobalInventory(ctx context.Context) ([]dto.InventoryDTO, error) {
 	log.Println("GetGlobalInventory: Fetching all inventory")
-	inventories, err := s.repo.FindAll(ctx)
+	inventories, err := s.Repo.FindAll(ctx)
 	if err != nil {
 		log.Printf("GetGlobalInventory: Error fetching inventory: %v", err)
 		return nil, err
@@ -36,7 +40,7 @@ func (s *InventoryService) GetGlobalInventory(ctx context.Context) ([]dto.Invent
 }
 
 func (s *InventoryService) GetStoreInventory(ctx context.Context, storeID string) ([]dto.InventoryDTO, error) {
-	inventories, err := s.repo.FindAll(ctx)
+	inventories, err := s.Repo.FindAll(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -52,7 +56,7 @@ func (s *InventoryService) GetStoreInventory(ctx context.Context, storeID string
 }
 
 func (s *InventoryService) GetItemInventory(ctx context.Context, itemID string) ([]dto.InventoryDTO, error) {
-	inventories, err := s.repo.FindAll(ctx)
+	inventories, err := s.Repo.FindAll(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -68,7 +72,7 @@ func (s *InventoryService) GetItemInventory(ctx context.Context, itemID string) 
 }
 
 func (s *InventoryService) GetGroupedInventory(ctx context.Context) ([]dto.GroupedInventoryDTO, error) {
-	inventories, err := s.repo.FindAll(ctx)
+	inventories, err := s.Repo.FindAll(ctx)
 	if err != nil {
 		return nil, err
 	}
