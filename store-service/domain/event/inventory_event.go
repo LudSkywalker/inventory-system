@@ -1,6 +1,10 @@
 package event
 
-import "time"
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
 
 type InventoryEvent struct {
 	EventID   string    `json:"event_id"`
@@ -20,6 +24,10 @@ func NewInventoryEvent(itemID, storeID string, quantity int, operation string) I
 		Operation: operation,
 		Timestamp: time.Now(),
 	}
+}
+
+func GenerateEventID() string {
+	return uuid.Must(uuid.NewV7()).String()
 }
 
 // Event types

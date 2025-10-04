@@ -7,7 +7,7 @@
 //
 // Schemes: http, https
 // Host: localhost:8081
-// BasePath: /api/v1
+// BasePath: /
 // Version: 1.0.0
 //
 // Consumes:
@@ -48,6 +48,7 @@ import (
 	"github.com/LudSkywalker/inventory-system/backend-service/app/service"
 	"github.com/LudSkywalker/inventory-system/backend-service/infra/http"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 	fiberSwagger "github.com/swaggo/fiber-swagger"
 )
 
@@ -64,6 +65,13 @@ func main() {
 
 	// Initialize Fiber app
 	app := fiber.New()
+
+	// CORS middleware
+	app.Use(cors.New(cors.Config{
+		AllowOrigins: "http://localhost:3000,http://127.0.0.1:3000,http://localhost:8080,http://127.0.0.1:8080,http://localhost:8081,http://127.0.0.1:8081,http://localhost:8082,http://127.0.0.1:8082,http://localhost:8083,http://127.0.0.1:8083",
+		AllowHeaders: "Origin, Content-Type, Accept, Authorization",
+		AllowMethods: "GET, POST, PUT, DELETE, OPTIONS",
+	}))
 
 	// Register routes
 	handler.RegisterRoutes(app)

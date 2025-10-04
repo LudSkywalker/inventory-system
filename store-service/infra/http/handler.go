@@ -18,6 +18,7 @@ func (h *InventoryHandler) RegisterRoutes(app *fiber.App) {
 	group := app.Group("/api/v1/inventory")
 
 	group.Post("/", h.UpdateStock)
+	group.Get("/", h.ListInventory)
 	group.Get("/:storeId/:itemId", h.GetStock)
 	group.Delete("/:storeId/:itemId", h.DeleteStock)
 }
@@ -75,6 +76,26 @@ func (h *InventoryHandler) GetStock(c *fiber.Ctx) error {
 	}
 
 	return c.JSON(inventory)
+}
+
+// ListInventory godoc
+// @Summary List all inventory
+// @Description Get all inventory items across all stores
+// @Tags inventory
+// @Accept json
+// @Produce json
+// @Success 200 {array} dto.InventoryDTO
+// @Failure 500 {object} map[string]string
+// @Router /api/v1/inventory [get]
+func (h *InventoryHandler) ListInventory(c *fiber.Ctx) error {
+	inventories, err := h.useCase.ListInventory(c.Context())
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	return c.JSON(inventories)
 }
 
 // DeleteStock godoc

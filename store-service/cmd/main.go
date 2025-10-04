@@ -11,7 +11,7 @@
 // @license.url http://www.apache.org/licenses/LICENSE-2.0.html
 
 // @host localhost:8080
-// @BasePath /api/v1
+// @BasePath /
 // @schemes http https
 
 // @externalDocs.description OpenAPI
@@ -25,16 +25,19 @@
 package main
 
 import (
+	"context"
 	"database/sql"
 	"log"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/LudSkywalker/inventory-system/store-service/app/service"
 	"github.com/LudSkywalker/inventory-system/store-service/infra/http"
 	"github.com/LudSkywalker/inventory-system/store-service/infra/kafka"
 	"github.com/LudSkywalker/inventory-system/store-service/infra/sqlite"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 	fiberSwagger "github.com/swaggo/fiber-swagger"
 )
 
@@ -66,12 +69,19 @@ func main() {
 	// Initialize Fiber app
 	app := fiber.New()
 
+	// CORS middleware
+	app.Use(cors.New(cors.Config{
+		AllowOrigins: "http://localhost:3000,http://127.0.0.1:3000,http://localhost:8080,http://127.0.0.1:8080,http://localhost:8081,http://127.0.0.1:8081,http://localhost:8082,http://127.0.0.1:8082,http://localhost:8083,http://127.0.0.1:8083",
+		AllowHeaders: "Origin, Content-Type, Accept, Authorization",
+		AllowMethods: "GET, POST, PUT, DELETE, OPTIONS",
+	}))
+
 	// Register routes
 	inventoryHandler.RegisterRoutes(app)
 
 	// Swagger routes
 	app.Get("/swagger/doc.json", func(c *fiber.Ctx) error {
-		return c.SendFile("./store-service/docs/docs.json")
+		return c.SendFile("./docs/swagger.json")
 	})
 	app.Get("/swagger/*", fiberSwagger.WrapHandler)
 
@@ -82,6 +92,26 @@ func main() {
 	}
 
 	log.Printf("Server starting on port %s", port)
+
+	// Start periodic sync goroutine
+	go func() {
+		ticker := time.NewTicker(1 * time.Hour)
+		defer ticker.Stop()
+
+		for {
+			select {
+			case <-ticker.C:
+				log.Println("Starting periodic inventory sync")
+				ctx := context.Background()
+				if err := inventoryService.SyncAllInventories(ctx); err != nil {
+					log.Printf("Error during periodic sync: %v", err)
+				} else {
+					log.Println("Periodic inventory sync completed")
+				}
+			}
+		}
+	}()
+
 	if err := app.Listen(":" + port); err != nil {
 		log.Fatalf("Failed to start server: %v", err)
 	}

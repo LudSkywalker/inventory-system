@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/LudSkywalker/inventory-system/store-service/app/dto"
-	"github.com/LudSkywalker/inventory-system/store-service/app/port/output"
+	output "github.com/LudSkywalker/inventory-system/store-service/app/port/output"
 	"github.com/LudSkywalker/inventory-system/store-service/domain/entity"
 	"github.com/LudSkywalker/inventory-system/store-service/domain/event"
 	"github.com/LudSkywalker/inventory-system/store-service/domain/valueobject"
@@ -73,6 +73,47 @@ func (s *inventoryService) GetStock(ctx context.Context, query dto.GetStockQuery
 		Quantity:  inventory.Quantity.Value(),
 		UpdatedAt: inventory.UpdatedAt.Format("2006-01-02T15:04:05Z07:00"),
 	}, nil
+}
+
+func (s *inventoryService) ListInventory(ctx context.Context) ([]*dto.InventoryDTO, error) {
+	inventories, err := s.repo.List(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("listing inventories: %w", err)
+	}
+
+	var result []*dto.InventoryDTO
+	for _, inventory := range inventories {
+		result = append(result, &dto.InventoryDTO{
+			ItemID:    inventory.ItemID,
+			StoreID:   inventory.StoreID,
+			Quantity:  inventory.Quantity.Value(),
+			UpdatedAt: inventory.UpdatedAt.Format("2006-01-02T15:04:05Z07:00"),
+		})
+	}
+
+	return result, nil
+}
+
+func (s *inventoryService) SyncAllInventories(ctx context.Context) error {
+	inventories, err := s.repo.List(ctx)
+	if err != nil {
+		return fmt.Errorf("listing inventories for sync: %w", err)
+	}
+
+	for _, inventory := range inventories {
+		evt := event.NewInventoryEvent(
+			inventory.ItemID,
+			inventory.StoreID,
+			inventory.Quantity.Value(),
+			event.OperationUpdate, // Use UPDATE for sync
+		)
+
+		if err := s.eventBus.PublishInventoryChange(ctx, evt); err != nil {
+			return fmt.Errorf("publishing sync event for %s/%s: %w", inventory.ItemID, inventory.StoreID, err)
+		}
+	}
+
+	return nil
 }
 
 func (s *inventoryService) DeleteStock(ctx context.Context, cmd dto.DeleteStockCommand) error {

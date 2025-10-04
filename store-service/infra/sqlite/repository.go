@@ -77,6 +77,50 @@ func (r *SQLiteRepository) Find(ctx context.Context, itemID, storeID string) (*e
 	return inventory, nil
 }
 
+func (r *SQLiteRepository) List(ctx context.Context) ([]*entity.Inventory, error) {
+	query := `
+		SELECT item_id, store_id, quantity, updated_at
+		FROM inventories
+		ORDER BY updated_at DESC
+	`
+
+	rows, err := r.db.QueryContext(ctx, query)
+	if err != nil {
+		return nil, fmt.Errorf("querying inventories: %w", err)
+	}
+	defer rows.Close()
+
+	var inventories []*entity.Inventory
+	for rows.Next() {
+		var quantityValue int
+		inventory := &entity.Inventory{}
+
+		err := rows.Scan(
+			&inventory.ItemID,
+			&inventory.StoreID,
+			&quantityValue,
+			&inventory.UpdatedAt,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("scanning inventory: %w", err)
+		}
+
+		quantity, err := valueobject.NewQuantity(quantityValue)
+		if err != nil {
+			return nil, fmt.Errorf("invalid quantity in database: %w", err)
+		}
+
+		inventory.Quantity = quantity
+		inventories = append(inventories, inventory)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterating rows: %w", err)
+	}
+
+	return inventories, nil
+}
+
 func (r *SQLiteRepository) Delete(ctx context.Context, itemID, storeID string) error {
 	query := "DELETE FROM inventories WHERE item_id = ? AND store_id = ?"
 
