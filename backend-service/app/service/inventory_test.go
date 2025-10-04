@@ -36,8 +36,17 @@ func TestInventoryService_GetGroupedInventory(t *testing.T) {
 		t.Errorf("Expected 2 grouped items, got %d", len(grouped))
 	}
 
+	// Find items by ItemID since map iteration order is not guaranteed
+	var item1, item2 dto.GroupedInventoryDTO
+	for _, g := range grouped {
+		if g.ItemID == "item1" {
+			item1 = g
+		} else if g.ItemID == "item2" {
+			item2 = g
+		}
+	}
+
 	// Check item1
-	item1 := grouped[0]
 	if item1.ItemID != "item1" || item1.ItemName != "Item 1" {
 		t.Errorf("Item1 mismatch: %+v", item1)
 	}
@@ -49,7 +58,6 @@ func TestInventoryService_GetGroupedInventory(t *testing.T) {
 	}
 
 	// Check item2
-	item2 := grouped[1]
 	if item2.ItemID != "item2" || item2.ItemName != "Item 2" {
 		t.Errorf("Item2 mismatch: %+v", item2)
 	}
