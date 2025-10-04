@@ -1,0 +1,160 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Backend Service API",
+    "description": "This is the backend service for the inventory management system. It provides REST API endpoints to query inventory data.",
+    "version": "1.0.0",
+    "contact": {
+      "name": "API Support",
+      "url": "http://www.swagger.io/support",
+      "email": "support@swagger.io"
+    },
+    "license": {
+      "name": "Apache 2.0",
+      "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+    }
+  },
+  "host": "localhost:8081",
+  "basePath": "/api/v1",
+  "schemes": ["http", "https"],
+  "paths": {
+    "/api/v1/inventory": {
+      "get": {
+        "summary": "Get global inventory",
+        "description": "Get all inventory items across all stores",
+        "tags": ["inventory"],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/InventoryDTO"
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "type": "object"
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/inventory/store/{storeId}": {
+      "get": {
+        "summary": "Get store inventory",
+        "description": "Get all inventory items for a specific store",
+        "tags": ["inventory"],
+        "parameters": [
+          {
+            "name": "storeId",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "Store ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/InventoryDTO"
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "type": "object"
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/inventory/item/{itemId}": {
+      "get": {
+        "summary": "Get item inventory",
+        "description": "Get all inventory information for a specific item across all stores",
+        "tags": ["inventory"],
+        "parameters": [
+          {
+            "name": "itemId",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "Item ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/InventoryDTO"
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "type": "object"
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "summary": "Health check",
+        "description": "Check if the service is running",
+        "tags": ["health"],
+        "responses": {
+          "200": {
+            "description": "Service is healthy",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "example": "ok"
+                },
+                "service": {
+                  "type": "string",
+                  "example": "backend-service"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "InventoryDTO": {
+      "type": "object",
+      "properties": {
+        "item_id": {
+          "type": "string",
+          "example": "item-123"
+        },
+        "store_id": {
+          "type": "string",
+          "example": "store-456"
+        },
+        "quantity": {
+          "type": "integer",
+          "example": 100
+        },
+        "updated_at": {
+          "type": "string",
+          "example": "2023-10-03T19:20:30Z"
+        }
+      }
+    }
+  }
+}

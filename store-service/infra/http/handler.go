@@ -2,15 +2,15 @@ package http
 
 import (
 	"github.com/LudSkywalker/inventory-system/store-service/app/dto"
-	"github.com/LudSkywalker/inventory-system/store-service/app/port/input"
+	port "github.com/LudSkywalker/inventory-system/store-service/app/port/input"
 	"github.com/gofiber/fiber/v2"
 )
 
 type InventoryHandler struct {
-	useCase input.InventoryUseCase
+	useCase port.InventoryUseCase
 }
 
-func NewInventoryHandler(useCase input.InventoryUseCase) *InventoryHandler {
+func NewInventoryHandler(useCase port.InventoryUseCase) *InventoryHandler {
 	return &InventoryHandler{useCase: useCase}
 }
 
@@ -22,6 +22,17 @@ func (h *InventoryHandler) RegisterRoutes(app *fiber.App) {
 	group.Delete("/:storeId/:itemId", h.DeleteStock)
 }
 
+// UpdateStock godoc
+// @Summary Update stock quantity
+// @Description Update the stock quantity for an item in a store
+// @Tags inventory
+// @Accept json
+// @Produce json
+// @Param request body dto.UpdateStockCommand true "Stock update request"
+// @Success 200
+// @Failure 400 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /api/v1/inventory [post]
 func (h *InventoryHandler) UpdateStock(c *fiber.Ctx) error {
 	var req dto.UpdateStockCommand
 	if err := c.BodyParser(&req); err != nil {
@@ -39,6 +50,17 @@ func (h *InventoryHandler) UpdateStock(c *fiber.Ctx) error {
 	return c.SendStatus(fiber.StatusOK)
 }
 
+// GetStock godoc
+// @Summary Get stock information
+// @Description Get stock quantity for a specific item in a store
+// @Tags inventory
+// @Accept json
+// @Produce json
+// @Param storeId path string true "Store ID"
+// @Param itemId path string true "Item ID"
+// @Success 200 {object} dto.InventoryDTO
+// @Failure 500 {object} map[string]string
+// @Router /api/v1/inventory/{storeId}/{itemId} [get]
 func (h *InventoryHandler) GetStock(c *fiber.Ctx) error {
 	query := dto.GetStockQuery{
 		StoreID: c.Params("storeId"),
@@ -55,6 +77,17 @@ func (h *InventoryHandler) GetStock(c *fiber.Ctx) error {
 	return c.JSON(inventory)
 }
 
+// DeleteStock godoc
+// @Summary Delete stock
+// @Description Delete stock information for a specific item in a store
+// @Tags inventory
+// @Accept json
+// @Produce json
+// @Param storeId path string true "Store ID"
+// @Param itemId path string true "Item ID"
+// @Success 200
+// @Failure 500 {object} map[string]string
+// @Router /api/v1/inventory/{storeId}/{itemId} [delete]
 func (h *InventoryHandler) DeleteStock(c *fiber.Ctx) error {
 	cmd := dto.DeleteStockCommand{
 		StoreID: c.Params("storeId"),

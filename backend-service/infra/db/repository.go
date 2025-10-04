@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"time"
 
@@ -25,18 +26,23 @@ func NewHTTPRepository(baseURL string) *HTTPRepository {
 }
 
 func (r *HTTPRepository) FindAll(ctx context.Context) ([]*dto.InventoryDTO, error) {
+	log.Printf("HTTPRepository: Making request to %s/inventories", r.baseURL)
 	req, err := http.NewRequestWithContext(ctx, "GET", r.baseURL+"/inventories", nil)
 	if err != nil {
+		log.Printf("HTTPRepository: Error creating request: %v", err)
 		return nil, fmt.Errorf("creating request: %w", err)
 	}
 
 	resp, err := r.client.Do(req)
 	if err != nil {
+		log.Printf("HTTPRepository: Error sending request: %v", err)
 		return nil, fmt.Errorf("sending request: %w", err)
 	}
 	defer resp.Body.Close()
 
+	log.Printf("HTTPRepository: Received response with status: %d", resp.StatusCode)
 	if resp.StatusCode != http.StatusOK {
+		log.Printf("HTTPRepository: Unexpected status code: %d", resp.StatusCode)
 		return nil, fmt.Errorf("unexpected status: %d", resp.StatusCode)
 	}
 
@@ -49,9 +55,11 @@ func (r *HTTPRepository) FindAll(ctx context.Context) ([]*dto.InventoryDTO, erro
 	}
 
 	if err := json.NewDecoder(resp.Body).Decode(&inventories); err != nil {
+		log.Printf("HTTPRepository: Error decoding response: %v", err)
 		return nil, fmt.Errorf("decoding response: %w", err)
 	}
 
+	log.Printf("HTTPRepository: Successfully decoded %d inventory items", len(inventories))
 	var dtos []*dto.InventoryDTO
 	for _, inv := range inventories {
 		dtos = append(dtos, &dto.InventoryDTO{
@@ -62,5 +70,6 @@ func (r *HTTPRepository) FindAll(ctx context.Context) ([]*dto.InventoryDTO, erro
 		})
 	}
 
+	log.Printf("HTTPRepository: Returning %d inventory DTOs", len(dtos))
 	return dtos, nil
 }

@@ -1,46 +1,25 @@
 package http
 
 import (
-	"github.com/LudSkywalker/inventory-system/operator-service/app/port/input"
+	"log"
+
 	"github.com/gofiber/fiber/v2"
 )
 
-type GlobalInventoryHandler struct {
-	useCase input.GlobalInventoryUseCase
+type HealthHandler struct{}
+
+func NewHealthHandler() *HealthHandler {
+	return &HealthHandler{}
 }
 
-func NewGlobalInventoryHandler(useCase input.GlobalInventoryUseCase) *GlobalInventoryHandler {
-	return &GlobalInventoryHandler{useCase: useCase}
+func (h *HealthHandler) RegisterRoutes(app *fiber.App) {
+	app.Get("/health", h.HealthCheck)
 }
 
-func (h *GlobalInventoryHandler) RegisterRoutes(app *fiber.App) {
-	group := app.Group("/api/v1/global-inventory")
-
-	group.Get("/", h.GetAllInventories)
-	group.Get("/:storeId/:itemId", h.GetInventory)
-}
-
-func (h *GlobalInventoryHandler) GetAllInventories(c *fiber.Ctx) error {
-	inventories, err := h.useCase.GetAllInventories(c.Context())
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": err.Error(),
-		})
-	}
-
-	return c.JSON(inventories)
-}
-
-func (h *GlobalInventoryHandler) GetInventory(c *fiber.Ctx) error {
-	storeID := c.Params("storeId")
-	itemID := c.Params("itemId")
-
-	inventory, err := h.useCase.GetGlobalInventory(c.Context(), itemID, storeID)
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": err.Error(),
-		})
-	}
-
-	return c.JSON(inventory)
+func (h *HealthHandler) HealthCheck(c *fiber.Ctx) error {
+	log.Println("Operator Service: Health check called")
+	return c.JSON(fiber.Map{
+		"status":  "ok",
+		"service": "operator-service",
+	})
 }

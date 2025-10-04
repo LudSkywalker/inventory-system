@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/LudSkywalker/inventory-system/internal/inventory/core/valueobject"
-	"github.com/LudSkywalker/inventory-system/internal/inventory/localstore/domain"
 )
 
 type Inventory struct {
@@ -68,7 +67,8 @@ func (r *SQLiteRepository) GetInventory(ctx context.Context, storeID, itemID str
 		return nil, fmt.Errorf("error querying inventory: %w", err)
 	}
 
-	inv.Quantity = valueobject.NewQuantity(quantity)
+	q, _ := valueobject.NewQuantity(quantity)
+	inv.Quantity = &q
 	return inv, nil
 }
 
@@ -135,7 +135,8 @@ func (r *SQLiteRepository) ListInventories(ctx context.Context) ([]*Inventory, e
 		if err := rows.Scan(&inv.StoreID, &inv.ItemID, &quantity, &inv.UpdatedAt, &inv.Version); err != nil {
 			return nil, fmt.Errorf("error scanning inventory: %w", err)
 		}
-		inv.Quantity = valueobject.NewQuantity(quantity)
+		q, _ := valueobject.NewQuantity(quantity)
+		inv.Quantity = &q
 		inventories = append(inventories, inv)
 	}
 
@@ -144,36 +145,6 @@ func (r *SQLiteRepository) ListInventories(ctx context.Context) ([]*Inventory, e
 	}
 
 	return inventories, nil
-}
-		WHERE item_id = ? AND store_id = ?
-	`
-
-	var quantityValue int
-	var inventory domain.Inventory
-
-	err := r.db.QueryRowContext(ctx, query, itemID, storeID).Scan(
-		&inventory.ItemID,
-		&inventory.StoreID,
-		&quantityValue,
-		&inventory.UpdatedAt,
-		&inventory.Version,
-	)
-
-	if err == sql.ErrNoRows {
-		return nil, fmt.Errorf("inventory not found")
-	}
-
-	if err != nil {
-		return nil, fmt.Errorf("querying inventory: %w", err)
-	}
-
-	quantity, err := valueobject.NewQuantity(quantityValue)
-	if err != nil {
-		return nil, fmt.Errorf("invalid quantity in database: %w", err)
-	}
-
-	inventory.Quantity = quantity
-	return &inventory, nil
 }
 
 func (r *SQLiteRepository) Delete(ctx context.Context, itemID, storeID string) error {

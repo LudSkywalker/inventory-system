@@ -1,0 +1,166 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Store Service API",
+    "description": "This is the store service for the inventory management system. It provides REST API endpoints to manage inventory at the store level.",
+    "version": "1.0.0",
+    "contact": {
+      "name": "API Support",
+      "url": "http://www.swagger.io/support",
+      "email": "support@swagger.io"
+    },
+    "license": {
+      "name": "Apache 2.0",
+      "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+    }
+  },
+  "host": "localhost:8080",
+  "basePath": "/api/v1",
+  "schemes": ["http", "https"],
+  "paths": {
+    "/api/v1/inventory": {
+      "post": {
+        "summary": "Update stock quantity",
+        "description": "Update the stock quantity for an item in a store",
+        "tags": ["inventory"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/definitions/UpdateStockCommand"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Stock updated successfully"
+          },
+          "400": {
+            "description": "Invalid request body",
+            "schema": {
+              "type": "object"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "type": "object"
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/inventory/{storeId}/{itemId}": {
+      "get": {
+        "summary": "Get stock information",
+        "description": "Get stock quantity for a specific item in a store",
+        "tags": ["inventory"],
+        "parameters": [
+          {
+            "name": "storeId",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "Store ID"
+          },
+          {
+            "name": "itemId",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "Item ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "schema": {
+              "$ref": "#/definitions/InventoryDTO"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "type": "object"
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete stock",
+        "description": "Delete stock information for a specific item in a store",
+        "tags": ["inventory"],
+        "parameters": [
+          {
+            "name": "storeId",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "Store ID"
+          },
+          {
+            "name": "itemId",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "description": "Item ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Stock deleted successfully"
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "type": "object"
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "UpdateStockCommand": {
+      "type": "object",
+      "required": ["item_id", "store_id", "quantity"],
+      "properties": {
+        "item_id": {
+          "type": "string",
+          "example": "item-123"
+        },
+        "store_id": {
+          "type": "string",
+          "example": "store-456"
+        },
+        "quantity": {
+          "type": "integer",
+          "example": 100
+        }
+      }
+    },
+    "InventoryDTO": {
+      "type": "object",
+      "properties": {
+        "item_id": {
+          "type": "string",
+          "example": "item-123"
+        },
+        "store_id": {
+          "type": "string",
+          "example": "store-456"
+        },
+        "quantity": {
+          "type": "integer",
+          "example": 100
+        },
+        "updated_at": {
+          "type": "string",
+          "example": "2023-10-03T19:20:30Z"
+        }
+      }
+    }
+  }
+}

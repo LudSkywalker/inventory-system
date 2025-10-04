@@ -13,7 +13,7 @@ import (
 )
 
 func main() {
-	// Initialize HTTP repository
+	// Initialize HTTP repository for Kafka consumer
 	dbURL := os.Getenv("DB_URL")
 	if dbURL == "" {
 		log.Fatalf("DB_URL environment variable is required")
@@ -21,7 +21,6 @@ func main() {
 
 	repo := http.NewHTTPRepository(dbURL)
 	inventoryService := service.NewGlobalInventoryService(repo)
-	handler := http.NewGlobalInventoryHandler(inventoryService)
 
 	// Initialize Kafka consumer
 	brokers := strings.Split(os.Getenv("KAFKA_BROKERS"), ",")
@@ -36,24 +35,24 @@ func main() {
 	defer cancel()
 
 	go func() {
+		log.Println("Starting Kafka consumer...")
 		if err := consumer.Start(ctx); err != nil {
 			log.Printf("Error starting consumer: %v", err)
 		}
 	}()
 
-	// Initialize Fiber app
+	// Initialize Fiber app with only health check
 	app := fiber.New()
-
-	// Register routes
+	handler := http.NewHealthHandler()
 	handler.RegisterRoutes(app)
 
 	// Start server
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "8081"
+		port = "8082"
 	}
 
-	log.Printf("Server starting on port %s", port)
+	log.Printf("Operator service starting on port %s", port)
 	if err := app.Listen(":" + port); err != nil {
 		log.Fatalf("Failed to start server: %v", err)
 	}
